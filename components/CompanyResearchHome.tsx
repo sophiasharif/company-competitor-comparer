@@ -912,7 +912,7 @@ export default function CompanyResearcher() {
   };
 
   return (
-    <div className="w-full max-w-5xl p-6 z-10 mb-20 mt-6">
+    <div className="w-full max-w-7xl p-6 z-10 mb-20 mt-6">
       <h1 className="md:text-6xl text-4xl pb-5 font-medium opacity-0 animate-fade-up [animation-delay:200ms]">
         <span className="text-brand-default"> Company </span>
         Researcher
@@ -1141,7 +1141,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Company Summary</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {companySummary ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1187,7 +1187,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Company Mind Map</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {companyMap ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1237,7 +1237,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Founders</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {founders && founders.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1283,7 +1283,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Funding</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {fundingData && !fundingData.summary.startsWith("NO") ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1329,7 +1329,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Financial Reports</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {financialReport && financialReport.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1375,7 +1375,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Crunchbase</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {crunchbaseData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1421,7 +1421,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">PitchBook</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {pitchbookData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1467,7 +1467,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Tracxn</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {tracxnData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1513,7 +1513,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Latest News</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {news && news.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1561,7 +1561,7 @@ export default function CompanyResearcher() {
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Social Presence</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}
                   {(twitterProfileText || (youtubeVideos && youtubeVideos.length > 0) || (redditPosts && redditPosts.length > 0) || tiktokData) ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
