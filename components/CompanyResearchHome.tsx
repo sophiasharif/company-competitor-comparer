@@ -1411,14 +1411,14 @@ export default function CompanyResearcher() {
             )}
 
             {/* Funding Section */}
-            {(fundingData || competitorFundingData) && (
+            {(fundingData && !fundingData.summary.startsWith("NO") || competitorFundingData && !competitorFundingData.summary.startsWith("NO")) && (
               <div>
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Funding</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Your Company */}
-                  {fundingData ? (
+                  {fundingData && !fundingData.summary.startsWith("NO") ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
                       <div className="mb-2 flex items-center justify-center">
                         <span className="text-lg font-medium text-gray-800">{extractDomain(companyUrl)}</span>
@@ -1437,7 +1437,7 @@ export default function CompanyResearcher() {
                   {/* Competitor */}
                   {isCompetitorLoading && competitorFundingData == null ? (
                     <FundingSkeleton />
-                  ) : competitorFundingData ? (
+                  ) : competitorFundingData && !competitorFundingData.summary.startsWith("NO") ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
                       <div className="mb-2 flex items-center justify-center">
                         <span className="text-lg font-medium text-gray-800">{extractDomain(selectedCompetitorUrl)}</span>
@@ -1457,14 +1457,14 @@ export default function CompanyResearcher() {
             )}
 
             {/* Financial Reports Section */}
-            {(financialReport || competitorFinancialReport) && (
+            {(financialReport && financialReport.length > 0 || competitorFinancialReport && competitorFinancialReport.length > 0) && (
               <div>
                 <div className="flex justify-center mb-6">
                   <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Financial Reports</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Your Company */}
-                  {financialReport ? (
+                  {financialReport && financialReport.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
                       <div className="mb-2 flex items-center justify-center">
                         <span className="text-lg font-medium text-gray-800">{extractDomain(companyUrl)}</span>
@@ -1483,7 +1483,7 @@ export default function CompanyResearcher() {
                   {/* Competitor */}
                   {isCompetitorLoading && competitorFinancialReport == null ? (
                     <FinancialSkeleton />
-                  ) : competitorFinancialReport ? (
+                  ) : competitorFinancialReport && competitorFinancialReport.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
                       <div className="mb-2 flex items-center justify-center">
                         <span className="text-lg font-medium text-gray-800">{extractDomain(selectedCompetitorUrl)}</span>
