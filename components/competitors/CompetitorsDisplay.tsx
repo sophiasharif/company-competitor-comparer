@@ -11,6 +11,8 @@ interface Competitor {
 interface CompetitorDisplayProps {
   competitors: Competitor[];
   onCompetitorClick: (url: string) => void;
+  selectedCompetitorUrl: string | null;
+  isLoading: boolean;
 }
 
 // Function to extract the main part of the domain
@@ -23,7 +25,7 @@ const extractDomain = (url: string) => {
   }
 };
 
-export default function CompetitorsDisplay({ competitors, onCompetitorClick }: CompetitorDisplayProps) {
+export default function CompetitorsDisplay({ competitors, onCompetitorClick, selectedCompetitorUrl, isLoading }: CompetitorDisplayProps) {
   const [showAll, setShowAll] = useState(false);
   const INITIAL_DISPLAY_COUNT = 4;
 
@@ -38,20 +40,34 @@ export default function CompetitorsDisplay({ competitors, onCompetitorClick }: C
   return (
     <div>
       <h2 className="text-2xl font-normal pb-4">
-        Similar Companies
+        {selectedCompetitorUrl ? "Select a competitor to compare" : "Similar Companies"}
+        {selectedCompetitorUrl && (
+          <span className="ml-2 text-sm text-gray-500 font-normal">
+            (currently comparing with {extractDomain(selectedCompetitorUrl)})
+          </span>
+        )}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6">
         {visibleCompetitors.map((competitor) => (
           <div
             key={competitor.url}
-            className="bg-white p-6 border rounded-lg hover:ring-brand-default hover:ring-1 transition-all duration-200"
+            className={`bg-white p-6 border rounded-lg hover:ring-brand-default hover:ring-1 transition-all duration-200 ${
+              selectedCompetitorUrl === competitor.url ? 'ring-2 ring-brand-default bg-brand-default/5' : ''
+            }`}
           >
             <button
               onClick={() => onCompetitorClick(competitor.url)}
-              className="block group"
+              className="block group w-full text-left"
+              disabled={isLoading}
             >
-              <h3 className="text-lg font-medium text-brand-default group-hover:text-brand-default/80 transition-colors mb-2">
+              <h3 className={`text-lg font-medium ${selectedCompetitorUrl === competitor.url ? 'text-brand-default' : 'text-brand-default group-hover:text-brand-default/80'} transition-colors mb-2 flex items-center`}>
                 {competitor.title || extractDomain(competitor.url)}
+                {isLoading && selectedCompetitorUrl === competitor.url && (
+                  <span className="ml-2 inline-block animate-spin h-4 w-4 border-2 border-brand-default border-t-transparent rounded-full"></span>
+                )}
+                {selectedCompetitorUrl === competitor.url && !isLoading && (
+                  <span className="ml-2 text-xs bg-brand-default text-white px-2 py-0.5 rounded">Selected</span>
+                )}
               </h3>
               <p className="text-sm text-gray-600 mb-3 line-clamp-3">
                 {competitor.summary}

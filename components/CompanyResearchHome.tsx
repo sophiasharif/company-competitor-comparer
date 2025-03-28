@@ -106,8 +106,11 @@ interface CompanyMapData {
 export default function CompanyResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedCompetitorUrl, setSelectedCompetitorUrl] = useState<string | null>(null);
+  const [isCompetitorLoading, setIsCompetitorLoading] = useState(false);
   const [companyUrl, setCompanyUrl] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Original company data states
   const [linkedinData, setLinkedinData] = useState<LinkedInData | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[] | null>(null);
   const [news, setNews] = useState<NewsItem[] | null>(null);
@@ -126,6 +129,25 @@ export default function CompanyResearcher() {
   const [tracxnData, setTracxnData] = useState<any>(null);
   const [founders, setFounders] = useState<Founder[] | null>(null);
   const [companyMap, setCompanyMap] = useState<CompanyMapData | null>(null);
+  
+  // Competitor data states
+  const [competitorLinkedinData, setCompetitorLinkedinData] = useState<LinkedInData | null>(null);
+  const [competitorNews, setCompetitorNews] = useState<NewsItem[] | null>(null);
+  const [competitorSummary, setCompetitorSummary] = useState<any>(null);
+  const [competitorTwitterProfileText, setCompetitorTwitterProfileText] = useState<any>(null);
+  const [competitorRecentTweets, setCompetitorRecentTweets] = useState<Tweet[] | null>(null);
+  const [competitorYoutubeVideos, setCompetitorYoutubeVideos] = useState<Video[] | null>(null);
+  const [competitorRedditPosts, setCompetitorRedditPosts] = useState<RedditPost[] | null>(null);
+  const [competitorGithubUrl, setCompetitorGithubUrl] = useState<string | null>(null);
+  const [competitorFundingData, setCompetitorFundingData] = useState<any>(null);
+  const [competitorFinancialReport, setCompetitorFinancialReport] = useState<any>(null);
+  const [competitorTiktokData, setCompetitorTiktokData] = useState<any>(null);
+  const [competitorWikipediaData, setCompetitorWikipediaData] = useState<any>(null);
+  const [competitorCrunchbaseData, setCompetitorCrunchbaseData] = useState<any>(null);
+  const [competitorPitchbookData, setCompetitorPitchbookData] = useState<any>(null);
+  const [competitorTracxnData, setCompetitorTracxnData] = useState<any>(null);
+  const [competitorFounders, setCompetitorFounders] = useState<Founder[] | null>(null);
+  const [competitorMap, setCompetitorMap] = useState<CompanyMapData | null>(null);
 
   // Function to check if a string is a valid URL
   const isValidUrl = (url: string): boolean => {
@@ -857,6 +879,190 @@ export default function CompanyResearcher() {
     }
   };
 
+  // New function to handle competitor selection and research
+  const handleCompetitorSelect = async (url: string) => {
+    if (url === selectedCompetitorUrl) {
+      // Deselect competitor if clicked again
+      setSelectedCompetitorUrl(null);
+      // Reset all competitor states
+      resetCompetitorData();
+      return;
+    }
+
+    setSelectedCompetitorUrl(url);
+    setIsCompetitorLoading(true);
+    setErrors(prev => ({ ...prev, competitor: '' }));
+
+    // Reset all competitor states
+    resetCompetitorData();
+
+    const domainName = extractDomain(url);
+    
+    if (!domainName) {
+      setErrors(prev => ({ ...prev, competitor: "Invalid competitor URL" }));
+      setIsCompetitorLoading(false);
+      return;
+    }
+
+    try {
+      // Run all API calls in parallel for the competitor
+      const promises = [
+        // Main page scraping and dependent calls
+        (async () => {
+          const mainPageData = await scrapeMainPage(domainName);
+          if (mainPageData && mainPageData[0]?.summary) {
+            await Promise.all([
+              (async () => {
+                try {
+                  const subpagesResponse = await fetch('/api/scrapewebsitesubpages', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ websiteurl: domainName }),
+                  });
+
+                  if (!subpagesResponse.ok) {
+                    throw new Error('Failed to fetch subpages data');
+                  }
+
+                  const subpagesData = await subpagesResponse.json();
+
+                  // Fetch company summary for competitor
+                  const response = await fetch('/api/companysummary', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      subpages: subpagesData.results,
+                      mainpage: mainPageData,
+                      websiteurl: domainName
+                    }),
+                  });
+
+                  if (!response.ok) {
+                    throw new Error('Failed to fetch company summary');
+                  }
+
+                  const data = await response.json();
+                  setCompetitorSummary(data.result);
+
+                  // Fetch company map for competitor
+                  const mapResponse = await fetch('/api/companymap', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      mainpage: mainPageData,
+                      websiteurl: domainName
+                    }),
+                  });
+
+                  if (!mapResponse.ok) {
+                    throw new Error('Failed to fetch company map');
+                  }
+
+                  const mapData = await mapResponse.json();
+                  setCompetitorMap(mapData.result);
+                } catch (error) {
+                  console.error('Error fetching competitor details:', error);
+                  setErrors(prev => ({ ...prev, competitorDetails: error instanceof Error ? error.message : 'An error occurred with competitor details' }));
+                }
+              })()
+            ]);
+          }
+        })().catch((error) => setErrors(prev => ({ ...prev, competitorWebsiteData: error instanceof Error ? error.message : 'An error occurred with competitor website data' }))),
+
+        // Independent API calls that don't need main page data
+        fetchLinkedInData(domainName)
+          .then((data) => setCompetitorLinkedinData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorLinkedin: error instanceof Error ? error.message : 'An error occurred with competitor LinkedIn' }))),
+
+        fetchNews(domainName)
+          .then((data) => setCompetitorNews(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorNews: error instanceof Error ? error.message : 'An error occurred with competitor news' }))),
+
+        fetchTwitterProfile(domainName)
+          .then((data) => setCompetitorTwitterProfileText(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorTwitter: error instanceof Error ? error.message : 'An error occurred with competitor Twitter profile' }))),
+
+        fetchYoutubeVideos(domainName)
+          .then((data) => setCompetitorYoutubeVideos(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorYoutube: error instanceof Error ? error.message : 'An error occurred with competitor YouTube videos' }))),
+
+        fetchRedditPosts(domainName)
+          .then((data) => setCompetitorRedditPosts(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorReddit: error instanceof Error ? error.message : 'An error occurred with competitor Reddit posts' }))),
+
+        fetchGitHubUrl(domainName)
+          .then((url) => setCompetitorGithubUrl(url))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorGithub: error instanceof Error ? error.message : 'An error occurred with competitor GitHub' }))),
+
+        fetchFunding(domainName)
+          .then((data) => setCompetitorFundingData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorFunding: error instanceof Error ? error.message : 'An error occurred with competitor funding data' }))),
+
+        fetchFinancialReport(domainName)
+          .then((data) => setCompetitorFinancialReport(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorFinancial: error instanceof Error ? error.message : 'An error occurred with competitor financial report' }))),
+
+        fetchTikTokProfile(domainName)
+          .then((data) => setCompetitorTiktokData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorTiktok: error instanceof Error ? error.message : 'An error occurred with competitor TikTok profile' }))),
+
+        fetchWikipedia(domainName)
+          .then((data) => setCompetitorWikipediaData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorWikipedia: error instanceof Error ? error.message : 'An error occurred with competitor Wikipedia data' }))),
+
+        fetchCrunchbase(domainName)
+          .then((data) => setCompetitorCrunchbaseData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorCrunchbase: error instanceof Error ? error.message : 'An error occurred with competitor Crunchbase data' }))),
+
+        fetchPitchbook(domainName)
+          .then((data) => setCompetitorPitchbookData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorPitchbook: error instanceof Error ? error.message : 'An error occurred with competitor PitchBook data' }))),
+
+        fetchTracxn(domainName)
+          .then((data) => setCompetitorTracxnData(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorTracxn: error instanceof Error ? error.message : 'An error occurred with competitor Tracxn data' }))),
+
+        fetchFounders(domainName)
+          .then((data) => setCompetitorFounders(data))
+          .catch((error) => setErrors(prev => ({ ...prev, competitorFounders: error instanceof Error ? error.message : 'An error occurred with competitor founders' })))
+      ];
+
+      await Promise.allSettled(promises);
+    } catch (error) {
+      console.error("Error researching competitor:", error);
+      setErrors(prev => ({ ...prev, competitor: error instanceof Error ? error.message : 'An error occurred with competitor research' }));
+    } finally {
+      setIsCompetitorLoading(false);
+    }
+  };
+
+  // Helper function to reset competitor data
+  const resetCompetitorData = () => {
+    setCompetitorLinkedinData(null);
+    setCompetitorNews(null);
+    setCompetitorSummary(null);
+    setCompetitorTwitterProfileText(null);
+    setCompetitorRecentTweets(null);
+    setCompetitorYoutubeVideos(null);
+    setCompetitorRedditPosts(null);
+    setCompetitorGithubUrl(null);
+    setCompetitorFundingData(null);
+    setCompetitorFinancialReport(null);
+    setCompetitorTiktokData(null);
+    setCompetitorWikipediaData(null);
+    setCompetitorCrunchbaseData(null);
+    setCompetitorPitchbookData(null);
+    setCompetitorTracxnData(null);
+    setCompetitorFounders(null);
+    setCompetitorMap(null);
+  };
+
   return (
     <div className="w-full max-w-5xl p-6 z-10 mb-20 mt-6">
       <h1 className="md:text-6xl text-4xl pb-5 font-medium opacity-0 animate-fade-up [animation-delay:200ms]">
@@ -890,7 +1096,7 @@ export default function CompanyResearcher() {
           <a 
             href="https://exa.ai" 
             target="_blank" 
-            rel="origin"
+            rel="noopener noreferrer"
             className="hover:opacity-80 transition-opacity"
           >
             <img src="/exa_logo.png" alt="Exa Logo" className="h-6 sm:h-7 object-contain" />
@@ -905,193 +1111,380 @@ export default function CompanyResearcher() {
       ))}
 
       <div className="space-y-12">
-        {/* Company Overview Section */}
+        {/* Competitors Section */}
+        <div className="space-y-16">
+          {isGenerating && competitors === null ? (
+            <CompetitorsSkeleton />
+          ) : competitors && competitors.length > 0 && (
+            <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+              <CompetitorsDisplay 
+                competitors={competitors} 
+                onCompetitorClick={handleCompetitorSelect} 
+                selectedCompetitorUrl={selectedCompetitorUrl}
+                isLoading={isCompetitorLoading}
+              />
+            </div>
+          )}
+        </div>
+        
+        {/* Main content area */}
         {selectedCompetitorUrl && (
-          <div className="space-y-16">
-            <div className="flex items-center">
-              <h2 className="text-4xl font-medium">{selectedCompetitorUrl}</h2>
+          <div className="mt-2 mb-6">
+            <div className="flex items-center justify-center">
+              <h2 className="text-2xl text-gray-700 font-medium">Comparing companies</h2>
+            </div>
+            <div className="flex items-center justify-center mt-1">
+              <span className="text-gray-500">{extractDomain(companyUrl)}</span>
+              <span className="mx-2 text-gray-400">vs</span>
+              <span className="text-brand-default">{extractDomain(selectedCompetitorUrl)}</span>
             </div>
           </div>
         )}
+        <div className={`${selectedCompetitorUrl ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : ''}`}>
+          {/* Original Company Column */}
           <div className="space-y-16">
-            {isGenerating && competitors === null ? (
-              <CompetitorsSkeleton />
-            ) : competitors && competitors.length > 0 && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <CompetitorsDisplay competitors={competitors} onCompetitorClick={setSelectedCompetitorUrl} />
-              </div>
-            )}
-          </div>
-        
-          <div className="space-y-16">
-          {(linkedinData || companySummary || founders || financialReport || 
-          fundingData || crunchbaseData || pitchbookData || tracxnData || 
-          wikipediaData) && (
-            <div className="flex items-center">
-              <h2 className="text-4xl font-medium">Company Overview</h2>
-            </div>
-            )}
-
-            {/* {isGenerating && linkedinData === null ? (
-              <LinkedInSkeleton />
-            ) : linkedinData && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <LinkedInDisplay data={linkedinData} />
-              </div>
-            )} */}
-
-            {isGenerating && founders === null ? (
-              <FoundersSkeleton />
-            ) : founders && founders.length > 0 && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <FoundersDisplay founders={founders} />
-              </div>
-            )}
-
-            {linkedinData && parseCompanySize(processLinkedInText(linkedinData).companySize) >= 1000 && (
-              isGenerating && financialReport === null ? (
-                <FinancialSkeleton />
-              ) : financialReport && (
-                <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                  <FinancialReportDisplay report={financialReport} />
-                </div>
-              )
-            )}
-
-            <div className="space-y-6">
-              {isGenerating && fundingData === null ? (
-                <FundingSkeleton />
-              ) : fundingData && (
-                <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                  <FundingDisplay fundingData={fundingData} />
-                </div>
-              )}
-
-              {isGenerating && crunchbaseData === null ? (
-                <FundingSkeleton />
-              ) : crunchbaseData && (
-                <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                  <CrunchbaseDisplay data={crunchbaseData} />
-                </div>
-              )}
-
-              {isGenerating && pitchbookData === null ? (
-                <FundingSkeleton />
-              ) : pitchbookData && (
-                <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                  <PitchBookDisplay data={pitchbookData} />
-                </div>
-              )}
-
-              {isGenerating && tracxnData === null ? (
-                <FundingSkeleton />
-              ) : tracxnData && (
-                <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                  <TracxnDisplay data={tracxnData} />
-                </div>
-              )}
-            </div>
-
-            {isGenerating && wikipediaData === null ? (
-              <WikipediaSkeleton />
-            ) : wikipediaData && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <WikipediaDisplay data={wikipediaData} websiteUrl={companyUrl} />
-              </div>
-            )}
-
-            {isGenerating && news === null ? (
-              <NewsSkeleton />
-            ) : news && news.length > 0 && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <NewsDisplay news={news} />
-              </div>
-            )}
-          </div>
-      
-
-        {/* Company Socials Section */}
-          <div className="space-y-16 pt-12">
-
-          {(twitterProfileText || youtubeVideos || tiktokData || 
-          redditPosts || githubUrl) && (
-            <div className="flex items-center">
-              <h2 className="text-4xl font-medium">Company Socials</h2>
-            </div>
-            )}
-
-            {isGenerating && twitterProfileText === null ? (
-              <TwitterSkeleton />
-            ) : twitterProfileText && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <ProfileDisplay rawText={twitterProfileText.text} username={twitterProfileText.username} />
-                {recentTweets && <RecentTweetsDisplay tweets={recentTweets} />}
-              </div>
-            )}
-
-            {isGenerating && youtubeVideos === null ? (
-              <YouTubeSkeleton />
-            ) : youtubeVideos && youtubeVideos.length > 0 && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <YoutubeVideosDisplay videos={youtubeVideos} />
-              </div>
-            )}
-
-            {isGenerating && redditPosts === null ? (
-              <RedditSkeleton />
-            ) : redditPosts && redditPosts.length > 0 && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <RedditDisplay posts={redditPosts} />
-              </div>
-            )}
-
-            {isGenerating && tiktokData === null ? (
-              <TikTokSkeleton />
-            ) : tiktokData && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <TikTokDisplay data={tiktokData} />
-              </div>
-            )}
-
-            {isGenerating && githubUrl === null ? (
-              <GitHubSkeleton />
-            ) : githubUrl && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <GitHubDisplay githubUrl={githubUrl} />
-              </div>
-            )}
-          </div>
-        
-
-        {/* Summary and Mind Map Section */}
-        {(isGenerating || companySummary) && (
-              <div className="space-y-8">
+            {/* Original Company Overview Section */}
+            {(linkedinData || companySummary || founders || financialReport || 
+            fundingData || crunchbaseData || pitchbookData || tracxnData || 
+            wikipediaData) && (
+              <div>
                 <div className="flex items-center">
-                  <h2 className="text-3xl font-medium mt-6">Summary and Mind Map</h2>
+                  <h2 className="text-4xl font-medium">
+                    {selectedCompetitorUrl ? (
+                      <div className="flex items-center">
+                        {extractDomain(companyUrl)}
+                        {selectedCompetitorUrl && (
+                          <span className="ml-3 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                            Your company
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      "Company Overview"
+                    )}
+                  </h2>
                 </div>
 
-                {isGenerating && companySummary === null ? (
-                  <CompanySummarySkeleton />
-                ) : companySummary && (
-                  <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                    <CompanySummary summary={companySummary} />
-                  </div>
-                )}
-
-                {isGenerating && companyMap === null ? (
-                  <div className="hidden sm:block animate-pulse">
-                    <div className="h-64 bg-secondary-darkest rounded-lg flex items-center justify-center">
-                      <p className="text-gray-400 text-md">Loading...</p>
+                <div className="space-y-8 mt-6">
+                  {isGenerating && founders === null ? (
+                    <FoundersSkeleton />
+                  ) : founders && founders.length > 0 && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <FoundersDisplay founders={founders} />
                     </div>
+                  )}
+
+                  {linkedinData && parseCompanySize(processLinkedInText(linkedinData).companySize) >= 1000 && (
+                    isGenerating && financialReport === null ? (
+                      <FinancialSkeleton />
+                    ) : financialReport && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <FinancialReportDisplay report={financialReport} />
+                      </div>
+                    )
+                  )}
+
+                  <div className="space-y-6">
+                    {isGenerating && fundingData === null ? (
+                      <FundingSkeleton />
+                    ) : fundingData && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <FundingDisplay fundingData={fundingData} />
+                      </div>
+                    )}
+
+                    {isGenerating && crunchbaseData === null ? (
+                      <FundingSkeleton />
+                    ) : crunchbaseData && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <CrunchbaseDisplay data={crunchbaseData} />
+                      </div>
+                    )}
+
+                    {isGenerating && pitchbookData === null ? (
+                      <FundingSkeleton />
+                    ) : pitchbookData && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <PitchBookDisplay data={pitchbookData} />
+                      </div>
+                    )}
+
+                    {isGenerating && tracxnData === null ? (
+                      <FundingSkeleton />
+                    ) : tracxnData && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <TracxnDisplay data={tracxnData} />
+                      </div>
+                    )}
                   </div>
-                ) : companyMap && (
-                  <div className="hidden sm:block opacity-0 animate-fade-up [animation-delay:200ms]">
-                    <CompanyMindMap data={companyMap} />
-                  </div>
-                )}
+
+                  {isGenerating && wikipediaData === null ? (
+                    <WikipediaSkeleton />
+                  ) : wikipediaData && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <WikipediaDisplay data={wikipediaData} websiteUrl={companyUrl} />
+                    </div>
+                  )}
+
+                  {isGenerating && news === null ? (
+                    <NewsSkeleton />
+                  ) : news && news.length > 0 && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <NewsDisplay news={news} />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
+            {/* Original Company Socials Section */}
+            {(twitterProfileText || youtubeVideos || tiktokData || 
+            redditPosts || githubUrl) && (
+              <div>
+                <div className="flex items-center">
+                  <h2 className="text-4xl font-medium">
+                    {selectedCompetitorUrl ? `${extractDomain(companyUrl)} Socials` : "Company Socials"}
+                  </h2>
+                </div>
+
+                <div className="space-y-8 mt-6">
+                  {isGenerating && twitterProfileText === null ? (
+                    <TwitterSkeleton />
+                  ) : twitterProfileText && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <ProfileDisplay rawText={twitterProfileText.text} username={twitterProfileText.username} />
+                      {recentTweets && <RecentTweetsDisplay tweets={recentTweets} />}
+                    </div>
+                  )}
+
+                  {isGenerating && youtubeVideos === null ? (
+                    <YouTubeSkeleton />
+                  ) : youtubeVideos && youtubeVideos.length > 0 && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <YoutubeVideosDisplay videos={youtubeVideos} />
+                    </div>
+                  )}
+
+                  {isGenerating && redditPosts === null ? (
+                    <RedditSkeleton />
+                  ) : redditPosts && redditPosts.length > 0 && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <RedditDisplay posts={redditPosts} />
+                    </div>
+                  )}
+
+                  {isGenerating && tiktokData === null ? (
+                    <TikTokSkeleton />
+                  ) : tiktokData && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <TikTokDisplay data={tiktokData} />
+                    </div>
+                  )}
+
+                  {isGenerating && githubUrl === null ? (
+                    <GitHubSkeleton />
+                  ) : githubUrl && (
+                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                      <GitHubDisplay githubUrl={githubUrl} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Competitor Column */}
+          {selectedCompetitorUrl && (
+            <div className="space-y-16">
+              {/* Competitor Overview Section */}
+              {(competitorLinkedinData || competitorSummary || competitorFounders || competitorFinancialReport || 
+              competitorFundingData || competitorCrunchbaseData || competitorPitchbookData || competitorTracxnData || 
+              competitorWikipediaData) && (
+                <div>
+                  <div className="flex items-center">
+                    <h2 className="text-4xl font-medium">
+                      <div className="flex items-center">
+                        {extractDomain(selectedCompetitorUrl)}
+                        <span className="ml-3 text-xs bg-brand-default/10 text-brand-default px-2 py-1 rounded-full">
+                          Competitor
+                        </span>
+                      </div>
+                    </h2>
+                    {isCompetitorLoading && (
+                      <div className="ml-3">
+                        <div className="animate-spin h-5 w-5 border-2 border-brand-default border-t-transparent rounded-full"></div>
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => {
+                        setSelectedCompetitorUrl(null);
+                        resetCompetitorData();
+                      }}
+                      className="ml-auto flex items-center gap-1 text-gray-600 hover:text-brand-default text-sm transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                      </svg>
+                      Back to {extractDomain(companyUrl)}
+                    </button>
+                  </div>
+
+                  <div className="space-y-8 mt-6">
+                    {isCompetitorLoading ? (
+                      <FoundersSkeleton />
+                    ) : competitorFounders && competitorFounders.length > 0 && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <FoundersDisplay founders={competitorFounders} />
+                      </div>
+                    )}
+
+                    {competitorLinkedinData && parseCompanySize(processLinkedInText(competitorLinkedinData).companySize) >= 1000 && (
+                      isCompetitorLoading ? (
+                        <FinancialSkeleton />
+                      ) : competitorFinancialReport && (
+                        <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                          <FinancialReportDisplay report={competitorFinancialReport} />
+                        </div>
+                      )
+                    )}
+
+                    <div className="space-y-6">
+                      {isCompetitorLoading ? (
+                        <FundingSkeleton />
+                      ) : competitorFundingData && (
+                        <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                          <FundingDisplay fundingData={competitorFundingData} />
+                        </div>
+                      )}
+
+                      {isCompetitorLoading ? (
+                        <FundingSkeleton />
+                      ) : competitorCrunchbaseData && (
+                        <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                          <CrunchbaseDisplay data={competitorCrunchbaseData} />
+                        </div>
+                      )}
+
+                      {isCompetitorLoading ? (
+                        <FundingSkeleton />
+                      ) : competitorPitchbookData && (
+                        <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                          <PitchBookDisplay data={competitorPitchbookData} />
+                        </div>
+                      )}
+
+                      {isCompetitorLoading ? (
+                        <FundingSkeleton />
+                      ) : competitorTracxnData && (
+                        <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                          <TracxnDisplay data={competitorTracxnData} />
+                        </div>
+                      )}
+                    </div>
+
+                    {isCompetitorLoading ? (
+                      <WikipediaSkeleton />
+                    ) : competitorWikipediaData && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <WikipediaDisplay data={competitorWikipediaData} websiteUrl={selectedCompetitorUrl} />
+                      </div>
+                    )}
+
+                    {isCompetitorLoading ? (
+                      <NewsSkeleton />
+                    ) : competitorNews && competitorNews.length > 0 && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <NewsDisplay news={competitorNews} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Competitor Socials Section */}
+              {(competitorTwitterProfileText || competitorYoutubeVideos || competitorTiktokData || 
+              competitorRedditPosts || competitorGithubUrl) && (
+                <div>
+                  <div className="flex items-center">
+                    <h2 className="text-4xl font-medium">{extractDomain(selectedCompetitorUrl)} Socials</h2>
+                  </div>
+
+                  <div className="space-y-8 mt-6">
+                    {isCompetitorLoading ? (
+                      <TwitterSkeleton />
+                    ) : competitorTwitterProfileText && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <ProfileDisplay rawText={competitorTwitterProfileText.text} username={competitorTwitterProfileText.username} />
+                        {competitorRecentTweets && <RecentTweetsDisplay tweets={competitorRecentTweets} />}
+                      </div>
+                    )}
+
+                    {isCompetitorLoading ? (
+                      <YouTubeSkeleton />
+                    ) : competitorYoutubeVideos && competitorYoutubeVideos.length > 0 && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <YoutubeVideosDisplay videos={competitorYoutubeVideos} />
+                      </div>
+                    )}
+
+                    {isCompetitorLoading ? (
+                      <RedditSkeleton />
+                    ) : competitorRedditPosts && competitorRedditPosts.length > 0 && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <RedditDisplay posts={competitorRedditPosts} />
+                      </div>
+                    )}
+
+                    {isCompetitorLoading ? (
+                      <TikTokSkeleton />
+                    ) : competitorTiktokData && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <TikTokDisplay data={competitorTiktokData} />
+                      </div>
+                    )}
+
+                    {isCompetitorLoading ? (
+                      <GitHubSkeleton />
+                    ) : competitorGithubUrl && (
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <GitHubDisplay githubUrl={competitorGithubUrl} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Summary and Mind Map Section - Only for main company, not in the comparison view */}
+        {!selectedCompetitorUrl && (isGenerating || companySummary) && (
+          <div className="space-y-8">
+            <div className="flex items-center">
+              <h2 className="text-3xl font-medium mt-6">Summary and Mind Map</h2>
+            </div>
+
+            {isGenerating && companySummary === null ? (
+              <CompanySummarySkeleton />
+            ) : companySummary && (
+              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                <CompanySummary summary={companySummary} />
+              </div>
+            )}
+
+            {isGenerating && companyMap === null ? (
+              <div className="hidden sm:block animate-pulse">
+                <div className="h-64 bg-secondary-darkest rounded-lg flex items-center justify-center">
+                  <p className="text-gray-400 text-md">Loading...</p>
+                </div>
+              </div>
+            ) : companyMap && (
+              <div className="hidden sm:block opacity-0 animate-fade-up [animation-delay:200ms]">
+                <CompanyMindMap data={companyMap} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex-grow"></div>
         <footer className="fixed bottom-0 left-0 right-0 w-full py-4 bg-secondary-default border-t opacity-0 animate-fade-up [animation-delay:1200ms]">
@@ -1099,7 +1492,7 @@ export default function CompanyResearcher() {
             <Link 
               href="https://github.com/exa-labs/company-researcher"
               target="_blank"
-              rel="origin"
+              rel="noopener noreferrer"
               className="text-gray-600 hover:underline cursor-pointer text-center"
             >
               Clone this open source project here
@@ -1108,7 +1501,7 @@ export default function CompanyResearcher() {
             <Link 
                 href="https://exa.ai" 
                 target="_blank" 
-                rel="origin"
+                rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity hidden sm:inline"
               >
             <div className="flex items-center gap-2">
