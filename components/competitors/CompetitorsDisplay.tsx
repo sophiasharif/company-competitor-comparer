@@ -10,6 +10,7 @@ interface Competitor {
 
 interface CompetitorDisplayProps {
   competitors: Competitor[];
+  onCompetitorClick: (url: string) => void;
 }
 
 // Function to extract the main part of the domain
@@ -22,7 +23,7 @@ const extractDomain = (url: string) => {
   }
 };
 
-export default function CompetitorsDisplay({ competitors }: CompetitorDisplayProps) {
+export default function CompetitorsDisplay({ competitors, onCompetitorClick }: CompetitorDisplayProps) {
   const [showAll, setShowAll] = useState(false);
   const INITIAL_DISPLAY_COUNT = 4;
 
@@ -45,10 +46,8 @@ export default function CompetitorsDisplay({ competitors }: CompetitorDisplayPro
             key={competitor.url}
             className="bg-white p-6 border rounded-lg hover:ring-brand-default hover:ring-1 transition-all duration-200"
           >
-            <a
-              href={competitor.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => onCompetitorClick(competitor.url)}
               className="block group"
             >
               <h3 className="text-lg font-medium text-brand-default group-hover:text-brand-default/80 transition-colors mb-2">
@@ -57,7 +56,7 @@ export default function CompetitorsDisplay({ competitors }: CompetitorDisplayPro
               <p className="text-sm text-gray-600 mb-3 line-clamp-3">
                 {competitor.summary}
               </p>
-            </a>
+            </button>
           </div>
         ))}
       </div>

@@ -9,6 +9,8 @@ const exa = new Exa(process.env.EXA_API_KEY as string);
 export async function POST(req: NextRequest) {
   try {
     const { websiteurl, summaryText } = await req.json();
+    console.log('websiteurl', websiteurl);
+    console.log('summaryText', summaryText);
     if (!websiteurl || !summaryText) {
       return NextResponse.json({ error: 'Website URL and summary text are required' }, { status: 400 });
     }
@@ -27,6 +29,8 @@ export async function POST(req: NextRequest) {
         excludeDomains: [websiteurl]
       }
     );
+
+    console.log('result.results', result.results);
 
     return NextResponse.json({ results: result.results });
   } catch (error) {

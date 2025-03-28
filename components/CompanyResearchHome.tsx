@@ -105,6 +105,7 @@ interface CompanyMapData {
 
 export default function CompanyResearcher() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedCompetitorUrl, setSelectedCompetitorUrl] = useState<string | null>(null);
   const [companyUrl, setCompanyUrl] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [linkedinData, setLinkedinData] = useState<LinkedInData | null>(null);
@@ -905,6 +906,22 @@ export default function CompanyResearcher() {
 
       <div className="space-y-12">
         {/* Company Overview Section */}
+        {selectedCompetitorUrl && (
+          <div className="space-y-16">
+            <div className="flex items-center">
+              <h2 className="text-4xl font-medium">{selectedCompetitorUrl}</h2>
+            </div>
+          </div>
+        )}
+          <div className="space-y-16">
+            {isGenerating && competitors === null ? (
+              <CompetitorsSkeleton />
+            ) : competitors && competitors.length > 0 && (
+              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                <CompetitorsDisplay competitors={competitors} onCompetitorClick={setSelectedCompetitorUrl} />
+              </div>
+            )}
+          </div>
         
           <div className="space-y-16">
           {(linkedinData || companySummary || founders || financialReport || 
@@ -980,14 +997,6 @@ export default function CompanyResearcher() {
             ) : wikipediaData && (
               <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
                 <WikipediaDisplay data={wikipediaData} websiteUrl={companyUrl} />
-              </div>
-            )}
-
-            {isGenerating && competitors === null ? (
-              <CompetitorsSkeleton />
-            ) : competitors && competitors.length > 0 && (
-              <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                <CompetitorsDisplay competitors={competitors} />
               </div>
             )}
 
