@@ -11,7 +11,6 @@ import ProfileDisplay from "./twitter/TwitterProfileDisplay";
 import RecentTweetsDisplay from "./twitter/RecentTweetsDisplay";
 import YoutubeVideosDisplay from "./youtube/YoutubeVideosDisplay";
 import RedditDisplay from "./reddit/RedditDisplay";
-import GitHubDisplay from "./github/GitHubDisplay";
 import FinancialReportDisplay from './financial/FinancialReportDisplay';
 import TikTokDisplay from './tiktok/TikTokDisplay';
 import WikipediaDisplay from './wikipedia/WikipediaDisplay';
@@ -23,7 +22,6 @@ import {
   LinkedInSkeleton,
   YouTubeSkeleton,
   TikTokSkeleton,
-  GitHubSkeleton,
   RedditSkeleton,
   TwitterSkeleton,
   CompetitorsSkeleton,
@@ -33,9 +31,11 @@ import {
   FinancialSkeleton,
   FundingSkeleton,
   CompanySummarySkeleton,
+  GitHubSkeleton,
 } from "./skeletons/ResearchSkeletons";
 import CompanyMindMap from './mindmap/CompanyMindMap';
 import Link from "next/link";
+import GitHubDisplay from "./github/GitHubDisplay";
 
 interface LinkedInData {
   text: string;
@@ -119,7 +119,6 @@ export default function CompanyResearcher() {
   const [recentTweets, setRecentTweets] = useState<Tweet[] | null>(null);
   const [youtubeVideos, setYoutubeVideos] = useState<Video[] | null>(null);
   const [redditPosts, setRedditPosts] = useState<RedditPost[] | null>(null);
-  const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [fundingData, setFundingData] = useState<any>(null);
   const [financialReport, setFinancialReport] = useState<any>(null);
   const [tiktokData, setTiktokData] = useState<any>(null);
@@ -138,7 +137,6 @@ export default function CompanyResearcher() {
   const [competitorRecentTweets, setCompetitorRecentTweets] = useState<Tweet[] | null>(null);
   const [competitorYoutubeVideos, setCompetitorYoutubeVideos] = useState<Video[] | null>(null);
   const [competitorRedditPosts, setCompetitorRedditPosts] = useState<RedditPost[] | null>(null);
-  const [competitorGithubUrl, setCompetitorGithubUrl] = useState<string | null>(null);
   const [competitorFundingData, setCompetitorFundingData] = useState<any>(null);
   const [competitorFinancialReport, setCompetitorFinancialReport] = useState<any>(null);
   const [competitorTiktokData, setCompetitorTiktokData] = useState<any>(null);
@@ -489,32 +487,6 @@ export default function CompanyResearcher() {
     }
   };
 
-  // GitHub URL fetch function
-  const fetchGitHubUrl = async (url: string) => {
-    try {
-      const response = await fetch('/api/fetchgithuburl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ websiteurl: url }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch GitHub URL');
-      }
-
-      const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        return data.results[0].url;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching GitHub URL:', error);
-      throw error;
-    }
-  };
-
   // Funding API fetch function
   const fetchFunding = async (url: string) => {
     try {
@@ -787,7 +759,6 @@ export default function CompanyResearcher() {
     setRecentTweets(null);
     setYoutubeVideos(null);
     setRedditPosts(null);
-    setGithubUrl(null);
     setFundingData(null);
     setFinancialReport(null);
     setTiktokData(null);
@@ -835,10 +806,6 @@ export default function CompanyResearcher() {
         fetchRedditPosts(domainName)
           .then((data) => setRedditPosts(data))
           .catch((error) => setErrors(prev => ({ ...prev, reddit: error instanceof Error ? error.message : 'An error occurred with Reddit posts' }))),
-
-        fetchGitHubUrl(domainName)
-          .then((url) => setGithubUrl(url))
-          .catch((error) => setErrors(prev => ({ ...prev, github: error instanceof Error ? error.message : 'An error occurred with GitHub' }))),
 
         fetchFunding(domainName)
           .then((data) => setFundingData(data))
@@ -996,10 +963,6 @@ export default function CompanyResearcher() {
           .then((data) => setCompetitorRedditPosts(data))
           .catch((error) => setErrors(prev => ({ ...prev, competitorReddit: error instanceof Error ? error.message : 'An error occurred with competitor Reddit posts' }))),
 
-        fetchGitHubUrl(domainName)
-          .then((url) => setCompetitorGithubUrl(url))
-          .catch((error) => setErrors(prev => ({ ...prev, competitorGithub: error instanceof Error ? error.message : 'An error occurred with competitor GitHub' }))),
-
         fetchFunding(domainName)
           .then((data) => setCompetitorFundingData(data))
           .catch((error) => setErrors(prev => ({ ...prev, competitorFunding: error instanceof Error ? error.message : 'An error occurred with competitor funding data' }))),
@@ -1051,7 +1014,6 @@ export default function CompanyResearcher() {
     setCompetitorRecentTweets(null);
     setCompetitorYoutubeVideos(null);
     setCompetitorRedditPosts(null);
-    setCompetitorGithubUrl(null);
     setCompetitorFundingData(null);
     setCompetitorFinancialReport(null);
     setCompetitorTiktokData(null);
@@ -1230,7 +1192,7 @@ export default function CompanyResearcher() {
 
             {/* Original Company Socials Section */}
             {(twitterProfileText || youtubeVideos || tiktokData || 
-            redditPosts || githubUrl) && (
+            redditPosts) && (
               <div>
                 <div className="flex items-center">
                   <h2 className="text-4xl font-medium">Company Socials</h2>
@@ -1267,14 +1229,6 @@ export default function CompanyResearcher() {
                   ) : tiktokData && (
                     <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
                       <TikTokDisplay data={tiktokData} />
-                    </div>
-                  )}
-
-                  {isGenerating && githubUrl === null ? (
-                    <GitHubSkeleton />
-                  ) : githubUrl && (
-                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                      <GitHubDisplay githubUrl={githubUrl} />
                     </div>
                   )}
                 </div>
@@ -1339,7 +1293,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorSummary === null ? (
                     <CompanySummarySkeleton />
                   ) : competitorSummary ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1385,7 +1339,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorMap == null ? (
                     <div className="hidden sm:block animate-pulse">
                       <div className="h-64 bg-secondary-darkest rounded-lg flex items-center justify-center">
                         <p className="text-gray-400 text-md">Loading...</p>
@@ -1435,7 +1389,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorFounders == null ? (
                     <FoundersSkeleton />
                   ) : competitorFounders && competitorFounders.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1481,7 +1435,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorFundingData == null ? (
                     <FundingSkeleton />
                   ) : competitorFundingData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1527,7 +1481,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorFinancialReport == null ? (
                     <FinancialSkeleton />
                   ) : competitorFinancialReport ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1573,7 +1527,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorWikipediaData == null ? (
                     <WikipediaSkeleton />
                   ) : competitorWikipediaData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1619,7 +1573,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorCrunchbaseData == null ? (
                     <FundingSkeleton />
                   ) : competitorCrunchbaseData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1665,7 +1619,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorPitchbookData == null ? (
                     <FundingSkeleton />
                   ) : competitorPitchbookData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1711,7 +1665,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorTracxnData == null ? (
                     <FundingSkeleton />
                   ) : competitorTracxnData ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1757,7 +1711,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorNews == null ? (
                     <NewsSkeleton />
                   ) : competitorNews && competitorNews.length > 0 ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
@@ -1828,7 +1782,7 @@ export default function CompanyResearcher() {
                   )}
                   
                   {/* Competitor */}
-                  {isCompetitorLoading ? (
+                  {isCompetitorLoading && competitorTwitterProfileText == null ? (
                     <div className="space-y-8">
                       <TwitterSkeleton />
                       <YouTubeSkeleton />
@@ -1885,31 +1839,6 @@ export default function CompanyResearcher() {
           </div>
         )}
       </div>
-      <div className="flex-grow"></div>
-        <footer className="fixed bottom-0 left-0 right-0 w-full py-4 bg-secondary-default border-t opacity-0 animate-fade-up [animation-delay:1200ms]">
-          <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:gap-6 px-4">
-            <Link 
-              href="https://github.com/exa-labs/company-researcher"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:underline cursor-pointer text-center"
-            >
-              Clone this open source project here
-            </Link>
-            <span className="text-gray-400 hidden sm:inline">|</span>
-            <Link 
-                href="https://exa.ai" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity hidden sm:inline"
-              >
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600 hover:text-gray-600 hover:underline">Powered by</span>
-                <img src="/exa_logo.png" alt="Exa Logo" className="h-5 object-contain" />
-            </div>
-            </Link>
-          </div>
-        </footer>
     </div>  
   );
 }
