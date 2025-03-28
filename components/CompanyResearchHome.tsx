@@ -968,29 +968,6 @@ export default function CompanyResearcher() {
             </div>
           )}
         </div>
-        
-        {/* Main content area - Use grid layout when a competitor is selected */}
-        {selectedCompetitorUrl && (
-          <div className="mt-2 mb-6">
-            <div className="flex items-center justify-center">
-              <h2 className="text-2xl text-gray-700 font-medium">Comparing companies</h2>
-            </div>
-            <div className="flex items-center justify-center mt-1">
-              <span className="text-gray-500">{extractDomain(companyUrl)}</span>
-              <span className="mx-2 text-gray-400">vs</span>
-              <span className="text-brand-default">{extractDomain(selectedCompetitorUrl)}</span>
-            </div>
-            <button 
-              onClick={() => setSelectedCompetitorUrl(null)}
-              className="mt-4 mx-auto flex items-center gap-1 text-gray-600 hover:text-brand-default text-sm transition-colors px-4 py-2 border border-gray-200 rounded-lg shadow-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              <span>Back to {extractDomain(companyUrl)}</span>
-            </button>
-          </div>
-        )}
 
         {!selectedCompetitorUrl ? (
           // Original non-comparison layout
