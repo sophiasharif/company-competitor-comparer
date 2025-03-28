@@ -2,7 +2,6 @@
 
 "use client";
 import { useState, FormEvent } from "react";
-import LinkedInDisplay from "./linkedin/LinkedinDisplay";
 import CompetitorsDisplay from "./competitors/CompetitorsDisplay";
 import NewsDisplay from "./news/NewsDisplay";
 import CompanySummary from "./companycontent/CompanySummar";
@@ -13,13 +12,11 @@ import YoutubeVideosDisplay from "./youtube/YoutubeVideosDisplay";
 import RedditDisplay from "./reddit/RedditDisplay";
 import FinancialReportDisplay from './financial/FinancialReportDisplay';
 import TikTokDisplay from './tiktok/TikTokDisplay';
-import WikipediaDisplay from './wikipedia/WikipediaDisplay';
 import CrunchbaseDisplay from './crunchbase/CrunchbaseDisplay';
 import PitchBookDisplay from './pitchbook/PitchBookDisplay';
 import TracxnDisplay from "./tracxn/TracxnDisplay";
 import FoundersDisplay from "./founders/FoundersDisplay";
 import {
-  LinkedInSkeleton,
   YouTubeSkeleton,
   TikTokSkeleton,
   RedditSkeleton,
@@ -27,23 +24,11 @@ import {
   CompetitorsSkeleton,
   NewsSkeleton,
   FoundersSkeleton,
-  WikipediaSkeleton,
   FinancialSkeleton,
   FundingSkeleton,
   CompanySummarySkeleton,
-  GitHubSkeleton,
 } from "./skeletons/ResearchSkeletons";
 import CompanyMindMap from './mindmap/CompanyMindMap';
-import Link from "next/link";
-import GitHubDisplay from "./github/GitHubDisplay";
-
-interface LinkedInData {
-  text: string;
-  url: string;
-  image: string;
-  title: string;
-  [key: string]: any;
-}
 
 interface Video {
   id: string;
@@ -111,7 +96,6 @@ export default function CompanyResearcher() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Original company data states
-  const [linkedinData, setLinkedinData] = useState<LinkedInData | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[] | null>(null);
   const [news, setNews] = useState<NewsItem[] | null>(null);
   const [companySummary, setCompanySummary] = useState<any>(null);
@@ -122,7 +106,6 @@ export default function CompanyResearcher() {
   const [fundingData, setFundingData] = useState<any>(null);
   const [financialReport, setFinancialReport] = useState<any>(null);
   const [tiktokData, setTiktokData] = useState<any>(null);
-  const [wikipediaData, setWikipediaData] = useState<any>(null);
   const [crunchbaseData, setCrunchbaseData] = useState<any>(null);
   const [pitchbookData, setPitchbookData] = useState<any>(null);
   const [tracxnData, setTracxnData] = useState<any>(null);
@@ -130,7 +113,6 @@ export default function CompanyResearcher() {
   const [companyMap, setCompanyMap] = useState<CompanyMapData | null>(null);
   
   // Competitor data states
-  const [competitorLinkedinData, setCompetitorLinkedinData] = useState<LinkedInData | null>(null);
   const [competitorNews, setCompetitorNews] = useState<NewsItem[] | null>(null);
   const [competitorSummary, setCompetitorSummary] = useState<any>(null);
   const [competitorTwitterProfileText, setCompetitorTwitterProfileText] = useState<any>(null);
@@ -140,7 +122,6 @@ export default function CompanyResearcher() {
   const [competitorFundingData, setCompetitorFundingData] = useState<any>(null);
   const [competitorFinancialReport, setCompetitorFinancialReport] = useState<any>(null);
   const [competitorTiktokData, setCompetitorTiktokData] = useState<any>(null);
-  const [competitorWikipediaData, setCompetitorWikipediaData] = useState<any>(null);
   const [competitorCrunchbaseData, setCompetitorCrunchbaseData] = useState<any>(null);
   const [competitorPitchbookData, setCompetitorPitchbookData] = useState<any>(null);
   const [competitorTracxnData, setCompetitorTracxnData] = useState<any>(null);
@@ -199,29 +180,6 @@ export default function CompanyResearcher() {
       return domain;
     } catch (error) {
       return null;
-    }
-  };
-
-  // LinkedIn API fetch function
-  const fetchLinkedInData = async (url: string) => {
-    try {
-      const response = await fetch('/api/scrapelinkedin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ websiteurl: url }),
-      });
-
-      if (!response.ok) {
-        throw new Error('LinkedIn research failed');
-      }
-
-      const data = await response.json();
-      return data.results[0];
-    } catch (error) {
-      console.error('Error fetching LinkedIn data:', error);
-      throw error;
     }
   };
 
@@ -562,35 +520,6 @@ export default function CompanyResearcher() {
     }
   };
 
-  // Wikipedia fetch function
-  const fetchWikipedia = async (url: string) => {
-    try {
-      const response = await fetch('/api/fetchwikipedia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ websiteurl: url }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch Wikipedia data');
-      }
-
-      const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        return {
-          text: data.results[0].text,
-          url: data.results[0].url
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching Wikipedia data:', error);
-      throw error;
-    }
-  };
-
   // Crunchbase fetch function
   const fetchCrunchbase = async (url: string) => {
     try {
@@ -697,31 +626,6 @@ export default function CompanyResearcher() {
     }
   };
 
-  // Add helper function to process LinkedIn text
-  const processLinkedInText = (data: LinkedInData) => {
-    const extract = (marker: string): string => {
-      const index = data.text.indexOf(marker);
-      if (index === -1) return '';
-      
-      const start = index + marker.length;
-      const possibleEndMarkers = ['Industry', 'Company size', 'Headquarters', '\n\n'];
-      let end = data.text.length;
-      
-      for (const endMarker of possibleEndMarkers) {
-        const nextIndex = data.text.indexOf(endMarker, start);
-        if (nextIndex !== -1 && nextIndex < end && nextIndex > start) {
-          end = nextIndex;
-        }
-      }
-      
-      return data.text.substring(start, end).trim();
-    };
-
-    return {
-      companySize: extract('Company size')
-    };
-  };
-
   // Add helper function to parse company size
   const parseCompanySize = (size: string): number => {
     if (!size) return 0;
@@ -751,7 +655,6 @@ export default function CompanyResearcher() {
     setErrors({});
 
     // Reset all states to null
-    setLinkedinData(null);
     setCompetitors(null);
     setNews(null);
     setCompanySummary(null);
@@ -762,7 +665,6 @@ export default function CompanyResearcher() {
     setFundingData(null);
     setFinancialReport(null);
     setTiktokData(null);
-    setWikipediaData(null);
     setCrunchbaseData(null);
     setPitchbookData(null);
     setTracxnData(null);
@@ -787,10 +689,6 @@ export default function CompanyResearcher() {
         })().catch((error) => setErrors(prev => ({ ...prev, websiteData: error instanceof Error ? error.message : 'An error occurred with website data' }))),
 
         // Independent API calls that don't need main page data
-        fetchLinkedInData(domainName)
-          .then((data) => setLinkedinData(data))
-          .catch((error) => setErrors(prev => ({ ...prev, linkedin: error instanceof Error ? error.message : 'An error occurred with LinkedIn' }))),
-
         fetchNews(domainName)
           .then((data) => setNews(data))
           .catch((error) => setErrors(prev => ({ ...prev, news: error instanceof Error ? error.message : 'An error occurred with news' }))),
@@ -818,10 +716,6 @@ export default function CompanyResearcher() {
         fetchTikTokProfile(domainName)
           .then((data) => setTiktokData(data))
           .catch((error) => setErrors(prev => ({ ...prev, tiktok: error instanceof Error ? error.message : 'An error occurred with TikTok profile' }))),
-
-        fetchWikipedia(domainName)
-          .then((data) => setWikipediaData(data))
-          .catch((error) => setErrors(prev => ({ ...prev, wikipedia: error instanceof Error ? error.message : 'An error occurred with Wikipedia data' }))),
 
         fetchCrunchbase(domainName)
           .then((data) => setCrunchbaseData(data))
@@ -943,9 +837,6 @@ export default function CompanyResearcher() {
         })().catch((error) => setErrors(prev => ({ ...prev, competitorWebsiteData: error instanceof Error ? error.message : 'An error occurred with competitor website data' }))),
 
         // Independent API calls that don't need main page data
-        fetchLinkedInData(domainName)
-          .then((data) => setCompetitorLinkedinData(data))
-          .catch((error) => setErrors(prev => ({ ...prev, competitorLinkedin: error instanceof Error ? error.message : 'An error occurred with competitor LinkedIn' }))),
 
         fetchNews(domainName)
           .then((data) => setCompetitorNews(data))
@@ -975,9 +866,6 @@ export default function CompanyResearcher() {
           .then((data) => setCompetitorTiktokData(data))
           .catch((error) => setErrors(prev => ({ ...prev, competitorTiktok: error instanceof Error ? error.message : 'An error occurred with competitor TikTok profile' }))),
 
-        fetchWikipedia(domainName)
-          .then((data) => setCompetitorWikipediaData(data))
-          .catch((error) => setErrors(prev => ({ ...prev, competitorWikipedia: error instanceof Error ? error.message : 'An error occurred with competitor Wikipedia data' }))),
 
         fetchCrunchbase(domainName)
           .then((data) => setCompetitorCrunchbaseData(data))
@@ -1007,7 +895,6 @@ export default function CompanyResearcher() {
 
   // Helper function to reset competitor data
   const resetCompetitorData = () => {
-    setCompetitorLinkedinData(null);
     setCompetitorNews(null);
     setCompetitorSummary(null);
     setCompetitorTwitterProfileText(null);
@@ -1017,7 +904,6 @@ export default function CompanyResearcher() {
     setCompetitorFundingData(null);
     setCompetitorFinancialReport(null);
     setCompetitorTiktokData(null);
-    setCompetitorWikipediaData(null);
     setCompetitorCrunchbaseData(null);
     setCompetitorPitchbookData(null);
     setCompetitorTracxnData(null);
@@ -1110,9 +996,8 @@ export default function CompanyResearcher() {
           // Original non-comparison layout
           <div className="space-y-16">
             {/* Original Company Overview Section */}
-            {(linkedinData || companySummary || founders || financialReport || 
-            fundingData || crunchbaseData || pitchbookData || tracxnData || 
-            wikipediaData) && (
+            {(companySummary || founders || financialReport || 
+            fundingData || crunchbaseData || pitchbookData || tracxnData) && (
               <div>
                 <div className="flex items-center">
                   <h2 className="text-4xl font-medium">Company Overview</h2>
@@ -1125,16 +1010,6 @@ export default function CompanyResearcher() {
                     <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
                       <FoundersDisplay founders={founders} />
                     </div>
-                  )}
-
-                  {linkedinData && parseCompanySize(processLinkedInText(linkedinData).companySize) >= 1000 && (
-                    isGenerating && financialReport === null ? (
-                      <FinancialSkeleton />
-                    ) : financialReport && (
-                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                        <FinancialReportDisplay report={financialReport} />
-                      </div>
-                    )
                   )}
 
                   <div className="space-y-6">
@@ -1170,14 +1045,6 @@ export default function CompanyResearcher() {
                       </div>
                     )}
                   </div>
-
-                  {isGenerating && wikipediaData === null ? (
-                    <WikipediaSkeleton />
-                  ) : wikipediaData && (
-                    <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                      <WikipediaDisplay data={wikipediaData} websiteUrl={companyUrl} />
-                    </div>
-                  )}
 
                   {isGenerating && news === null ? (
                     <NewsSkeleton />
@@ -1497,52 +1364,6 @@ export default function CompanyResearcher() {
                     </div>
                   ) : (
                     <div className="text-center py-10 text-gray-500">No financial report data found</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Wikipedia Section */}
-            {(wikipediaData || competitorWikipediaData) && (
-              <div>
-                <div className="flex justify-center mb-6">
-                  <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Wikipedia</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Your Company */}
-                  {wikipediaData ? (
-                    <div className="border border-gray-200 bg-white p-4 rounded-lg">
-                      <div className="mb-2 flex items-center justify-center">
-                        <span className="text-lg font-medium text-gray-800">{extractDomain(companyUrl)}</span>
-                        <span className="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                          Your company
-                        </span>
-                      </div>
-                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                        <WikipediaDisplay data={wikipediaData} websiteUrl={companyUrl} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 text-gray-500">No Wikipedia data found</div>
-                  )}
-                  
-                  {/* Competitor */}
-                  {isCompetitorLoading && competitorWikipediaData == null ? (
-                    <WikipediaSkeleton />
-                  ) : competitorWikipediaData ? (
-                    <div className="border border-gray-200 bg-white p-4 rounded-lg">
-                      <div className="mb-2 flex items-center justify-center">
-                        <span className="text-lg font-medium text-gray-800">{extractDomain(selectedCompetitorUrl)}</span>
-                        <span className="ml-2 text-xs bg-brand-default/10 text-brand-default px-2 py-1 rounded-full">
-                          Competitor
-                        </span>
-                      </div>
-                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                        <WikipediaDisplay data={competitorWikipediaData} websiteUrl={selectedCompetitorUrl} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 text-gray-500">No Wikipedia data found</div>
                   )}
                 </div>
               </div>
