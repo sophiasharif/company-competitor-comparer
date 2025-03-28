@@ -914,12 +914,12 @@ export default function CompanyResearcher() {
   return (
     <div className="w-full max-w-7xl p-6 z-10 mb-20 mt-6">
       <h1 className="md:text-6xl text-4xl pb-5 font-medium opacity-0 animate-fade-up [animation-delay:200ms]">
-        <span className="text-brand-default"> Company </span>
-        Researcher
+        <span className="text-brand-default"> Compare </span>
+        Competitors
       </h1>
 
       <p className="text-black mb-12 opacity-0 animate-fade-up [animation-delay:400ms]">
-        Enter a company URL for detailed research info. Instantly know any company inside out.
+      Enter a company name to see how it stacks up. Instantly compare performance, reach, and strategy against top competitors.
       </p>
 
       <form onSubmit={handleResearch} className="space-y-6 mb-20">
@@ -1139,7 +1139,7 @@ export default function CompanyResearcher() {
                         {(companySummary || competitorSummary) && (
               <div>
                 <div className="flex justify-center mb-6">
-                  <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Company Summary</h2>
+                  <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Company Comparison</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Your Company */}

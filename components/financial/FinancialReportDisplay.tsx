@@ -30,9 +30,7 @@ export default function FinancialReportDisplay({ report }: FinancialReportDispla
 
   return (
     <div className="mt-24">
-      <h2 className="text-2xl font-normal mb-6">Company 10K Financials</h2>
-
-      <div className="w-full overflow-x-auto py-6">
+      <div className="w-full overflow-x-auto ">
         <motion.div
           className="flex space-x-6 pb-6"
           drag="x"

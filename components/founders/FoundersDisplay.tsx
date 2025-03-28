@@ -12,9 +12,6 @@ interface FoundersDisplayProps {
 export default function FoundersDisplay({ founders }: FoundersDisplayProps) {
   return (
     <div>
-      <h3 className="text-2xl font-normal pb-4">
-        Founders
-      </h3>
       <div className="bg-white rounded-none p-6 border border-gray-200 mt-6">
         <div className="space-y-4">
           {founders.map((founder, index) => (
