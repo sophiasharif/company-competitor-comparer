@@ -1313,15 +1313,16 @@ export default function CompanyResearcher() {
         ) : (
           // Comparison side-by-side layout
           <div className="space-y-16">
-            {/* Summary and Mind Map Section - Moved to top */}
-            {(companySummary || companyMap || competitorSummary || competitorMap) && (
+
+                        {/* Summary Section */}
+                        {(companySummary || competitorSummary) && (
               <div>
                 <div className="flex justify-center mb-6">
-                  <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Summary and Mind Map</h2>
+                  <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Company Summary</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Your Company */}
-                  {(companySummary || companyMap) ? (
+                  {companySummary ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
                       <div className="mb-2 flex items-center justify-center">
                         <span className="text-lg font-medium text-gray-800">{extractDomain(companyUrl)}</span>
@@ -1329,17 +1330,8 @@ export default function CompanyResearcher() {
                           Your company
                         </span>
                       </div>
-                      <div className="space-y-6">
-                        {companySummary && (
-                          <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                            <CompanySummary summary={companySummary} />
-                          </div>
-                        )}
-                        {companyMap && (
-                          <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                            <CompanyMindMap data={companyMap} />
-                          </div>
-                        )}
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <CompanySummary summary={companySummary} />
                       </div>
                     </div>
                   ) : (
@@ -1348,15 +1340,8 @@ export default function CompanyResearcher() {
                   
                   {/* Competitor */}
                   {isCompetitorLoading ? (
-                    <div>
-                      <CompanySummarySkeleton />
-                      <div className="hidden sm:block animate-pulse mt-4">
-                        <div className="h-64 bg-secondary-darkest rounded-lg flex items-center justify-center">
-                          <p className="text-gray-400 text-md">Loading...</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (competitorSummary || competitorMap) ? (
+                    <CompanySummarySkeleton />
+                  ) : competitorSummary ? (
                     <div className="border border-gray-200 bg-white p-4 rounded-lg">
                       <div className="mb-2 flex items-center justify-center">
                         <span className="text-lg font-medium text-gray-800">{extractDomain(selectedCompetitorUrl)}</span>
@@ -1364,21 +1349,62 @@ export default function CompanyResearcher() {
                           Competitor
                         </span>
                       </div>
-                      <div className="space-y-6">
-                        {competitorSummary && (
-                          <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                            <CompanySummary summary={competitorSummary} />
-                          </div>
-                        )}
-                        {competitorMap && (
-                          <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
-                            <CompanyMindMap data={competitorMap} />
-                          </div>
-                        )}
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <CompanySummary summary={competitorSummary} />
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-10 text-gray-500">No summary data found</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Mind Map Section */}
+            {(companyMap || competitorMap) && (
+              <div>
+                <div className="flex justify-center mb-6">
+                  <h2 className="text-3xl font-medium border-b-2 border-brand-default pb-2">Company Mind Map</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Your Company */}
+                  {companyMap ? (
+                    <div className="border border-gray-200 bg-white p-4 rounded-lg">
+                      <div className="mb-2 flex items-center justify-center">
+                        <span className="text-lg font-medium text-gray-800">{extractDomain(companyUrl)}</span>
+                        <span className="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                          Your company
+                        </span>
+                      </div>
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <CompanyMindMap data={companyMap} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-500">No mind map data found</div>
+                  )}
+                  
+                  {/* Competitor */}
+                  {isCompetitorLoading ? (
+                    <div className="hidden sm:block animate-pulse">
+                      <div className="h-64 bg-secondary-darkest rounded-lg flex items-center justify-center">
+                        <p className="text-gray-400 text-md">Loading...</p>
+                      </div>
+                    </div>
+                  ) : competitorMap ? (
+                    <div className="border border-gray-200 bg-white p-4 rounded-lg">
+                      <div className="mb-2 flex items-center justify-center">
+                        <span className="text-lg font-medium text-gray-800">{extractDomain(selectedCompetitorUrl)}</span>
+                        <span className="ml-2 text-xs bg-brand-default/10 text-brand-default px-2 py-1 rounded-full">
+                          Competitor
+                        </span>
+                      </div>
+                      <div className="opacity-0 animate-fade-up [animation-delay:200ms]">
+                        <CompanyMindMap data={competitorMap} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-500">No mind map data found</div>
                   )}
                 </div>
               </div>
