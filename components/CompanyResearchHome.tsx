@@ -743,19 +743,26 @@ export default function CompanyResearcher() {
   // New function to handle competitor selection and research
   const handleCompetitorSelect = async (url: string) => {
     if (url === selectedCompetitorUrl) {
-      // Deselect competitor if clicked again
-      setSelectedCompetitorUrl(null);
-      // Reset all competitor states
-      resetCompetitorData();
       return;
     }
 
+    setCompetitorNews(null);
+    setCompetitorSummary(null);
+    setCompetitorTwitterProfileText(null);
+    setCompetitorRecentTweets(null);
+    setCompetitorYoutubeVideos(null);
+    setCompetitorRedditPosts(null);
+    setCompetitorFundingData(null);
+    setCompetitorFinancialReport(null);
+    setCompetitorTiktokData(null);
+    setCompetitorCrunchbaseData(null);
+    setCompetitorPitchbookData(null);
+    setCompetitorTracxnData(null);
+    setCompetitorFounders(null);
+    setCompetitorMap(null);
+
     setSelectedCompetitorUrl(url);
     setIsCompetitorLoading(true);
-    setErrors(prev => ({ ...prev, competitor: '' }));
-
-    // Reset all competitor states
-    resetCompetitorData();
 
     const domainName = extractDomain(url);
     
