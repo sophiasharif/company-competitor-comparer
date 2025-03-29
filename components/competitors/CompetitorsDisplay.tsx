@@ -58,7 +58,6 @@ export default function CompetitorsDisplay({ competitors, onCompetitorClick, sel
             <button
               onClick={() => onCompetitorClick(competitor.url)}
               className="block group w-full text-left"
-              disabled={isLoading}
             >
               <h3 className={`text-lg font-medium ${selectedCompetitorUrl === competitor.url ? 'text-brand-default' : 'text-brand-default group-hover:text-brand-default/80'} transition-colors mb-2 flex items-center`}>
                 {competitor.title || extractDomain(competitor.url)}

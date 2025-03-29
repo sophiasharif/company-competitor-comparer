@@ -742,6 +742,7 @@ export default function CompanyResearcher() {
 
   // New function to handle competitor selection and research
   const handleCompetitorSelect = async (url: string) => {
+    console.log("handleCompetitorSelect", url);
     if (url === selectedCompetitorUrl) {
       return;
     }
